@@ -1,36 +1,49 @@
-# create-react-scorm-app
+# Intégration SCORM 1.2 dans une application React
 
-A boilerplate project that extends Facebook's [create-react-app](https://github.com/facebook/create-react-app) adding [SCORM](https://scorm.com/scorm-explained/) functionality to receive and send data to an LMS.
+Ce projet montre comment intégrer SCORM 1.2 dans une application React. SCORM (Sharable Content Object Reference Model) est un ensemble de standards qui permet de partager et de réutiliser des contenus e-learning à travers différents systèmes. Ce guide explique chaque fonction, son utilité et comment utiliser le module pour interagir avec un Learning Management System (LMS) compatible avec SCORM 1.2.
 
-![Example gif](https://cdn.rawgit.com/simondate/assets/a5cf1000/scorm.gif)
-## Installation
+## Démarrage
 
-You need version 6+ of Node. Download it [here](https://nodejs.org/en/download/).
+### Aperçu des fonctions SCORM
 
-In your workspace open the your command line tool then run:
+L'objet `Scorm` de ce projet fournit plusieurs fonctions essentielles pour interagir avec un LMS compatible SCORM. Voici une explication détaillée de chaque fonction.
 
-`git clone https://github.com/simondate/create-react-scorm-app.git`
+- initializeLMS() --> Initialise la communication avec le LMS. Cette fonction initialise la communication avec le LMS. Elle doit être appelée lors du chargement du cours pour établir une connexion avec le LMS.Sans initialisation, l'API SCORM ne pourra pas envoyer ou recevoir de données. Cette étape est cruciale pour suivre la progression, les scores et autres données de l'apprenant.
 
-`npm install`
+- finishLMS() --> Termine la communication avec le LMS. Cette fonction doit être appelée avant de quitter le cours pour s'assurer que toutes les données sont correctement sauvegardées.
 
-`npm run start` to begin local development
+- recordObjectiveProgress(objectiveId, score) --> Enregistre la progression pour un objectif spécifique en créant ou mettant à jour une interaction dans le SCORM.
 
-## Deployment
+- setObjective(objectiveId) --> Crée un objectif si il n'existe pas. Retourne l'index de l'objectif créé.
 
-Run `npm run build` to create a `build` directory.
+- setObjectiveStatus(objectiveId: string, status: "completed" | "incomplete") Définit le statut de complétion d'un objectif spécifique.
 
-Inside the build folder zip up all the items and add the zip to your LMS.
+- getObjectiveStatus(objectiveId) --> Récupère le statut actuel d'un objectif. Retourne "completed", "incomplete", ou null si l'objectif n'existe pas. Si l'objectif n'existe pas,
 
-## Tips and tricks
-*  Some LMS' require modifications to you `imsmanifest.xml` file. You can find this in the `public` directory.
-*  [SCORM Cloud](https://cloud.scorm.com) is a great resource to test everything is working.
-*  It's best to only import the `Scorm.js` file to one React component and use this to handle the sending and receiving of data.
+- getSuspendData() --> Récupère les données stockées dans le LMS, permettant de reprendre la session là où elle a été interrompue.
 
-## Future plans
+- setSuspendData(data) --> Sauvegarde les données pour enregistrer l'état de progression de l'apprenant.
 
-*  More functionality
-    * Quiz scores
-    * Better error detection
-    * Recover state
-*  An xAPI version
-    * When our IT department allows it ;)
+## Création et empaquetage du cours
+
+- Préparer les fichiers SCORM : Incluez le fichier imsmanifest.xml et autres fichiers SCORM dans le répertoire build.
+- Compiler le projet : Exécutez la commande pour compiler le projet React :
+
+```bash
+
+npm run build
+
+```
+
+- Créer le fichier .zip : Accédez au répertoire build et compressez le contenu en un fichier .zip :
+
+```bash
+
+cd build
+zip -r ../course-package.zip
+
+```
+
+- Assurez-vous que le fichier imsmanifest.xml est à la racine du fichier .zip.
+
+- Télécharger sur le LMS : Téléchargez le fichier .zip sur le LMS pour déployer le cours.
