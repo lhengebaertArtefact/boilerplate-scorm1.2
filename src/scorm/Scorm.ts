@@ -1,112 +1,49 @@
-import { SCORM } from "pipwerks-scorm-api-wrapper";
+const SCORM = require("pipwerks-scorm-api-wrapper").SCORM;
 
-let Scorm = {
-
+const Scorm = {
   init() {
-    SCORM.init();
-  },
-
-  
-  recordObjectiveProgress(objectiveId: string, score: number) {
-    let interactionIndex = this.getInteractionIndex(objectiveId);
-    if (interactionIndex === -1) {
-      interactionIndex = this.createInteraction(objectiveId);
+    const initialized = SCORM.init();
+    if (!initialized) {
+      console.error("SCORM API failed to initialize.");
+    } else {
+      console.log("SCORM API initialized successfully.");
     }
-    this.setInteractionScore(interactionIndex, score);
   },
-  
-   getInteractionIndex(objectiveId: string) {
-    const count = parseInt(SCORM.get("cmi.interactions._count") || "0", 10);
-    for (let i = 0; i < count; i++) {
-      if (SCORM.get(`cmi.interactions.${i}.id`) === objectiveId) {
-        return i;
-      }
+
+  terminate() {
+    const terminated = SCORM.quit();
+    if (!terminated) {
+      console.error("SCORM API failed to terminate.");
+    } else {
+      console.log("SCORM API terminated successfully.");
     }
-    return -1;
-  },
-  
-   createInteraction(objectiveId: string) {
-    const count = parseInt(SCORM.get("cmi.interactions._count") || "0", 10);
-    SCORM.set(`cmi.interactions.${count}.id`, objectiveId);
-    SCORM.set(`cmi.interactions.${count}.type`, "choice");
-    return count;
-  },
-  
-   setInteractionScore(index: number, score: number) {
-    SCORM.set(
-      `cmi.interactions.${index}.result`,
-      score > 0 ? "correct" : "incorrect"
-    );
-    SCORM.set(`cmi.interactions.${index}.student_response`, score.toString());
-    SCORM.save();
   },
 
-  setObjective(objectiveId: string) {
-    const count = parseInt(SCORM.get("cmi.objectives._count") || "0", 10); // Récupère le nombre d'objectifs, le nombre 10 est le maximum
-    let objectiveIndex = -1;
-
-    for (let i = 0; i < count; i++) {
-      if (SCORM.get(`cmi.objectives.${i}.id`) === objectiveId) { // vérifie que l'objectif n'existe pas déjà
-        objectiveIndex = i;
-        break;
-      }
+  get(parameter) {
+    const value = SCORM.get(parameter);
+    if (value === null) {
+      console.error(`Failed to get value for parameter: ${parameter}`);
     }
+    return value;
+  },
 
-    if (objectiveIndex === -1) { // si l'objectif n'existe pas, crée un nouvel objectif
-      objectiveIndex = count;
-      SCORM.set(`cmi.objectives.${objectiveIndex}.id`, objectiveId);
+  set(parameter, value) {
+    const success = SCORM.set(parameter, value);
+    if (!success) {
+      console.error(`Failed to set value for parameter: ${parameter}`);
+    } else {
+      SCORM.save();
+      console.log(`Value set for ${parameter}: ${value}`);
     }
+  },
 
-    // Pas besoin de sauvegarder ici car c'est simplement la création de l'objectif
-    return objectiveIndex;
+  setComplete() {
+    this.set("cmi.core.lesson_status", "completed");
   },
-  
-   setObjectiveStatus(objectiveId: string, status: "completed" | "incomplete") {
-    const count = parseInt(SCORM.get("cmi.objectives._count") || "0", 10);
-    let objectiveIndex = -1;
-    for (let i = 0; i < count; i++) {
-      if (SCORM.get(`cmi.objectives.${i}.id`) === objectiveId) {
-        objectiveIndex = i;
-        break;
-      }
-    }
-  
-    SCORM.set(`cmi.objectives.${objectiveIndex}.status`,status === "completed" ? "completed" : "incomplete");
-    SCORM.save();
-  },
-  
-   setCompletionStatus(status: "completed" | "incomplete") {
-    const statusValue = status === "completed" ? "completed" : "incomplete";
-    SCORM.set("cmi.core.lesson_status", statusValue);
-    SCORM.save();
-  },
-  
-  
-   getObjectiveStatus(objectiveId: string): "completed" | "incomplete" | null {
-    const count = parseInt(SCORM.get("cmi.objectives._count") || "0", 10);
-    for (let i = 0; i < count; i++) {
-      if (SCORM.get(`cmi.objectives.${i}.id`) === objectiveId) {
-        return SCORM.get(`cmi.objectives.${i}.status`) as "completed" | "incomplete";
-      }
-    }
-    return null;
-  },
-  
-  getSuspendData() {
-    const data = SCORM.get("cmi.suspend_data");
-    return data ? JSON.parse(data) : null;
-  },
-  
-   setSuspendData(data: object) {
-    SCORM.set("cmi.suspend_data", JSON.stringify(data));
-    SCORM.save();
-  },
-  
-   finishLMS() {
-    SCORM.quit();
-  }
 
-}
-
+  setLocation(location: any) {
+    this.set("cmi.core.lesson_location", location);
+  },
+};
 
 export default Scorm;
